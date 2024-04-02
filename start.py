@@ -134,21 +134,21 @@ class TrigTriangle(Scene):
 		# print('height', theta_label.get_height())
 
 		# unit circle
-		circle = always_redraw(lambda: Circle(radius=hypotenuse.get_value()).set_color(GREY))
+		circle = always_redraw(lambda: Circle(radius=hypotenuse.get_value(), arc_center=(x.get_value(), y.get_value(), 0)).set_color(GREY))
 
 		# circle point
 		circle_point = always_redraw(lambda: get_dots().tr.set_color(PURPLE))
 		circle_point_label_distance = ValueTracker(0.04)
 		circle_point_label_size = ValueTracker(6)
-		circle_point_label = always_redraw(lambda: align_mobject_corner_interpolate(
-			Text(f'({round(math.cos(angle.get_value()), 2)}, {round(math.sin(angle.get_value()), 2)})', t2c={str(round(math.cos(angle.get_value()), 2)): BLUE, str(round(math.sin(angle.get_value()), 2)): RED}, font_size=round(circle_point_label_size.get_value()*hypotenuse.get_value())),
+		circle_point_label = always_redraw(lambda: (x_coord:=str(round(math.cos(angle.get_value()), 2)))and(y_coord:=str(round(math.sin(angle.get_value()), 2)))and align_mobject_corner_interpolate(
+			Text(f'({x_coord}, {y_coord})', t2c={y_coord: RED, x_coord+',': BLUE, ',': WHITE}, font_size=round(circle_point_label_size.get_value()*hypotenuse.get_value())),
 			get_points().tr,
 			0,
 			angle.get_value(),
 			circle_point_label_distance.get_value() * hypotenuse.get_value()	
 		))
 
-		number_plane = NumberPlane(
+		number_plane = always_redraw(lambda: (num_plane:=NumberPlane(
 			axis_config={
 				'stroke_color': '#AAA',
 			},
@@ -161,13 +161,13 @@ class TrigTriangle(Scene):
 				'stroke_width': 0.5,
 			},
 			faded_line_ratio=9,
-		).scale(hypotenuse.get_value())
-		number_plane.add_coordinate_labels()
+		).scale(hypotenuse.get_value()).shift((x.get_value(), y.get_value(), 0))) and num_plane.add_coordinate_labels() and num_plane)
+		# explanation for above: .add_coordinate_labels() returns the coordinate labels, but the always_redraw needs the number plane
 
 
 		self.play(FadeIn(number_plane))
 		self.play(ShowCreation(circle))
-		self.play(ShowCreation(theta_arc), *(ShowCreation(i) for i in always_redraw_lines), Write(theta_label), ShowCreation(circle_point), Write(circle_point_label))
-		self.play(*(Write(i) for i in always_redraw_labels))
+		self.play(ShowCreation(theta_arc), *(ShowCreation(i) for i in always_redraw_lines), Write(theta_label), ShowCreation(circle_point))
+		self.play(*(Write(i) for i in always_redraw_labels), Write(circle_point_label))
 		self.play(angle.animate.set_value(PI/3))
 		self.play(angle.animate.set_value(13*PI/6), run_time=4)
